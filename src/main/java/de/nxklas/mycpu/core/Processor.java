@@ -16,6 +16,13 @@ public class Processor {
         this.pc = 0;
     }
 
+    public int peekRegister(int index) {
+        if (index < 0 || index >= registers.length)
+            throw new IllegalArgumentException(
+                    "Argument 'index' must be in range of 0 to " + (registers.length - 1) + ". Actual value: " + index);
+        return registers[index];
+    }
+
     public void execute() {
         isRunning = true;
         while (isRunning && pc < program.length) {
