@@ -41,14 +41,15 @@ public final class AccessModeTests {
     public void decodeComputesCorrectValues(AccessMode expectedDst, AccessMode expectedSrc, byte mode) {
         var modes = AccessMode.decode(mode);
         assertAll(
-                () -> assertEquals(modes.value1, expectedDst),
-                () -> assertEquals(modes.value2, expectedSrc));
+            () -> assertEquals(modes.value1, expectedDst),
+            () -> assertEquals(modes.value2, expectedSrc)
+        );
     }
 
     private static Set<AccessMode> validAccessModes() {
         return Arrays.stream(AccessMode.values())
-                .map(mode -> mode)
-                .collect(Collectors.toSet());
+            .map(mode -> mode)
+            .collect(Collectors.toSet());
     }
 
     @Test
@@ -59,8 +60,8 @@ public final class AccessModeTests {
 
     private static Set<Byte> validAccessModeValues() {
         return Arrays.stream(AccessMode.values())
-                .map(mode -> mode.value)
-                .collect(Collectors.toSet());
+            .map(mode -> mode.value)
+            .collect(Collectors.toSet());
     }
 
     @Test
@@ -70,7 +71,7 @@ public final class AccessModeTests {
             final byte value = (byte) i;
             if (!validValues.contains(value))
                 assertThrows(IllegalArgumentException.class, () -> AccessMode.fromValue(value),
-                        "Argument 'value' was not a supported access mode: " + value);
+                    "Argument 'value' was not a supported access mode: " + value);
         }
     }
 }
