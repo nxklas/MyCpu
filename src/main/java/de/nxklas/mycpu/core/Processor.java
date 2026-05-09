@@ -2,16 +2,19 @@ package de.nxklas.mycpu.core;
 
 import de.nxklas.mycpu.core.instructions.*;
 import de.nxklas.mycpu.core.operands.*;
+import de.nxklas.mycpu.util.Tuple;
 
 public class Processor {
     private final byte[] program;
     private final int[] registers;
+    private final Alu alu;
     private boolean isRunning;
     private int pc;
 
     public Processor(byte[] program) {
         this.program = program;
         this.registers = new int[10];
+        this.alu = new Alu();
         this.isRunning = false;
         this.pc = 0;
     }
@@ -40,14 +43,26 @@ public class Processor {
     }
 
     private Instruction decode(byte opcode) {
+        Tuple<AccessMode, AccessMode> mode;
+        Operand dst, src;
         switch (Opcode.fromValue(opcode)) {
             case NOP:
                 return new NopInstruction();
             case MOV:
-                var mode = AccessMode.decode(next());
-                var dst = readOperand(mode.value1);
-                var src = readOperand(mode.value2);
+                mode = AccessMode.decode(next());
+                dst = readOperand(mode.value1);
+                src = readOperand(mode.value2);
                 return new MovInstruction(dst, src);
+            case ADD:
+                mode = AccessMode.decode(next());
+                dst = readOperand(mode.value1);
+                src = readOperand(mode.value2);
+                return new AddInstruction(dst, src);
+            case SUB:
+                mode = AccessMode.decode(next());
+                dst = readOperand(mode.value1);
+                src = readOperand(mode.value2);
+                return new SubInstruction(dst, src);
             case HALT:
                 return new HaltInstruction();
             default:
@@ -59,6 +74,8 @@ public class Processor {
         switch (instruction) {
             case NopInstruction _ -> nop();
             case MovInstruction movInstruction -> mov(movInstruction);
+            case AddInstruction addInstruction -> add(addInstruction);
+            case SubInstruction subInstruction -> sub(subInstruction);
             case HaltInstruction _ -> halt();
         }
     }
@@ -69,6 +86,20 @@ public class Processor {
     private void mov(MovInstruction instruction) {
         var srcValue = resolve(instruction.src);
         write(instruction.dst, srcValue);
+    }
+
+    private void add(AddInstruction instruction) {
+        var dstValue = resolve(instruction.dst);
+        var srcValue = resolve(instruction.src);
+        var newValue = alu.add(dstValue, srcValue);
+        write(instruction.dst, newValue);
+    }
+
+    private void sub(SubInstruction instruction) {
+        var dstValue = resolve(instruction.dst);
+        var srcValue = resolve(instruction.src);
+        var newValue = alu.sub(dstValue, srcValue);
+        write(instruction.dst, newValue);
     }
 
     private void halt() {
