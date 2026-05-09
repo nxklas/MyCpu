@@ -18,6 +18,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 */
 
 public class ProcessorTests {
+    private static final byte IMM_TO_REG = AccessMode.encode(AccessMode.REGISTER, AccessMode.IMMEDIATE);
+    private static final byte REG_TO_REG = AccessMode.encode(AccessMode.REGISTER, AccessMode.REGISTER);
+
     private static final Stream<Arguments> movImmediateToRegisterExecutesCorrectly_args() {
         return Stream.of(
             Arguments.of((byte) 0x00, (byte) 0x10),
@@ -37,7 +40,7 @@ public class ProcessorTests {
     @MethodSource("movImmediateToRegisterExecutesCorrectly_args")
     public void movImmediateToRegisterExecutesCorrectly(byte dstRegister, byte srcImmediate) {
         var program = new byte[] {
-            0x10, 0x04, dstRegister, srcImmediate
+            Opcode.MOV.value, IMM_TO_REG, dstRegister, srcImmediate
         };
         var processor = new Processor(program);
 
@@ -64,8 +67,8 @@ public class ProcessorTests {
     @MethodSource("movRegisterToRegisterExecutesCorrectly_args")
     public void movRegisterToRegisterExecutesCorrectly(byte dstRegister, byte srcRegister, byte immediate) {
         var program = new byte[] {
-            0x10, 0x04, srcRegister, immediate,
-            0x10, 0x05, dstRegister, srcRegister
+            Opcode.MOV.value, IMM_TO_REG, srcRegister, immediate,
+            Opcode.MOV.value, REG_TO_REG, dstRegister, srcRegister
         };
         var processor = new Processor(program);
 
