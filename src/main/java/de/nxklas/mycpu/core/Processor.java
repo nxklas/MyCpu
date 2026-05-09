@@ -91,7 +91,7 @@ public class Processor {
     private int resolve(Operand op) {
         return switch (op) {
             case ImmediateOperand i -> i.value;
-            case RegisterOperand i -> i.index;
+            case RegisterOperand i -> registers[i.index];
             default -> throw new IllegalArgumentException("Unexpected operand to resolve: " + op);
         };
     }
