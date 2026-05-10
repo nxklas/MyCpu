@@ -5,6 +5,7 @@ public enum Opcode {
     MOV(0x10),
     ADD(0x20),
     SUB(0x30),
+    CMP(0x40),
     HALT(0xFF);
 
     public final byte value;

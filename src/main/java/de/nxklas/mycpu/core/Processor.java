@@ -26,6 +26,10 @@ public class Processor {
         return registers[index];
     }
 
+    int peekFlags() {
+        return alu.flags();
+    }
+
     public void execute() {
         isRunning = true;
         while (isRunning && pc < program.length) {
@@ -63,6 +67,11 @@ public class Processor {
                 dst = readOperand(mode.value1);
                 src = readOperand(mode.value2);
                 return new SubInstruction(dst, src);
+            case CMP:
+                mode = AccessMode.decode(next());
+                dst = readOperand(mode.value1);
+                src = readOperand(mode.value2);
+                return new CmpInstruction(dst, src);
             case HALT:
                 return new HaltInstruction();
             default:
@@ -76,6 +85,7 @@ public class Processor {
             case MovInstruction movInstruction -> mov(movInstruction);
             case AddInstruction addInstruction -> add(addInstruction);
             case SubInstruction subInstruction -> sub(subInstruction);
+            case CmpInstruction cmpInstruction -> cmp(cmpInstruction);
             case HaltInstruction _ -> halt();
         }
     }
@@ -100,6 +110,12 @@ public class Processor {
         var srcValue = resolve(instruction.src);
         var newValue = alu.sub(dstValue, srcValue);
         write(instruction.dst, newValue);
+    }
+
+    private void cmp(CmpInstruction instruction) {
+        var dstValue = resolve(instruction.dst);
+        var srcValue = resolve(instruction.src);
+        var _ = alu.sub(dstValue, srcValue);
     }
 
     private void halt() {
