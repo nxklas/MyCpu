@@ -47,36 +47,35 @@ public class Processor {
     }
 
     private Instruction decode(byte opcode) {
-        Tuple<AccessMode, AccessMode> mode;
-        Operand dst, src;
+        Tuple<Operand, Operand> dstSrcPair;
+
         switch (Opcode.fromValue(opcode)) {
             case NOP:
                 return new NopInstruction();
             case MOV:
-                mode = AccessMode.decode(next());
-                dst = readOperand(mode.value1);
-                src = readOperand(mode.value2);
-                return new MovInstruction(dst, src);
+                dstSrcPair = readDstSrcPair();
+                return new MovInstruction(dstSrcPair.value1, dstSrcPair.value2);
             case ADD:
-                mode = AccessMode.decode(next());
-                dst = readOperand(mode.value1);
-                src = readOperand(mode.value2);
-                return new AddInstruction(dst, src);
+                dstSrcPair = readDstSrcPair();
+                return new AddInstruction(dstSrcPair.value1, dstSrcPair.value2);
             case SUB:
-                mode = AccessMode.decode(next());
-                dst = readOperand(mode.value1);
-                src = readOperand(mode.value2);
-                return new SubInstruction(dst, src);
+                dstSrcPair = readDstSrcPair();
+                return new SubInstruction(dstSrcPair.value1, dstSrcPair.value2);
             case CMP:
-                mode = AccessMode.decode(next());
-                dst = readOperand(mode.value1);
-                src = readOperand(mode.value2);
-                return new CmpInstruction(dst, src);
+                dstSrcPair = readDstSrcPair();
+                return new CmpInstruction(dstSrcPair.value1, dstSrcPair.value2);
             case HALT:
                 return new HaltInstruction();
             default:
                 throw new IllegalArgumentException("Unexpected opcode in instruction decode: " + opcode);
         }
+    }
+
+    private Tuple<Operand, Operand> readDstSrcPair() {
+        var mode = AccessMode.decode(next());
+        var dst = readOperand(mode.value1);
+        var src = readOperand(mode.value2);
+        return new Tuple<Operand, Operand>(dst, src);
     }
 
     private void execute(Instruction instruction) {
