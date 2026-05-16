@@ -32,6 +32,13 @@ public class Processor {
         return registers[index];
     }
 
+    void writeRegister(int index, int value) {
+        if (index < 0 || index >= registers.length)
+            throw new IllegalArgumentException(
+                    "Argument 'index' must be in range of 0 to " + (registers.length - 1) + ". Actual value: " + index);
+        registers[index] = value;
+    }
+
     int peekFlags() {
         return alu.flags();
     }
@@ -140,7 +147,7 @@ public class Processor {
         };
     }
 
-    private int resolve(Operand op) {
+    int resolve(Operand op) {
         return switch (op) {
             case ImmediateOperand i -> i.value();
             case RegisterOperand i -> registers[i.index()];

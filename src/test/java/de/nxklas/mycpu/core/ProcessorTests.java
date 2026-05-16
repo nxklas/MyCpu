@@ -11,6 +11,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import de.nxklas.mycpu.core.instructions.Instruction;
+import de.nxklas.mycpu.core.operands.ImmediateOperand;
+import de.nxklas.mycpu.core.operands.RegisterOperand;
 
 /*
     IMMEDIATE(0b00),
@@ -58,6 +60,37 @@ public class ProcessorTests {
         var processor = new Processor(program, 1); // To prevent the opcode being read, we set the program counter to the second instruction.
         var instruction = processor.decode(opcode.value);
         assertEquals(instruction, result);
+    }
+
+    private static Stream<Arguments> resolveResolvesImmediateValueCorrectly_args() {
+        return Stream.of(
+            Arguments.of(immediate(0x00), 0x00),
+            Arguments.of(immediate(0x10), 0x10)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("resolveResolvesImmediateValueCorrectly_args")
+    public void resolveResolvesImmediateValueCorrectly(ImmediateOperand operand, int value) {
+        var processor = new Processor(null);
+        var opVal = processor.resolve(operand);
+        assertEquals(opVal, value);
+    }
+
+    private static Stream<Arguments> resolveResolvesRegisterValueCorrectly_args() {
+        return Stream.of(
+            Arguments.of(register(0x00), 0x00, 0x20),
+            Arguments.of(register(0x01), 0x01, 0x10)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("resolveResolvesRegisterValueCorrectly_args")
+    public void resolveResolvesRegisterValueCorrectly(RegisterOperand operand, int index, int value) {
+        var processor = new Processor(null);
+        processor.writeRegister(index, value);
+        var opVal = processor.resolve(operand);
+        assertEquals(opVal, value);
     }
 
     private static final Stream<Arguments> movImmediateToRegisterExecutesCorrectly_args() {
