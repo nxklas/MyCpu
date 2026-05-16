@@ -27,13 +27,13 @@ public class ProcessorTests {
 
     private static final Stream<Arguments> decodeDecodesInstructionCorrectly_args() {
         return Stream.of(
-            createAddArgs((byte) 0x00, (byte) 0x01),
-            createAddArgs((byte) 0x02, (byte) 0x05),
-            createAddArgs((byte) 0x0A, (byte) 0x7F)
+            createInstructionArgs((byte) 0x00, (byte) 0x01),
+            createInstructionArgs((byte) 0x02, (byte) 0x05),
+            createInstructionArgs((byte) 0x0A, (byte) 0x7F)
         );
     }
 
-    private static Arguments createAddArgs(byte dst, byte src) {
+    private static Arguments createInstructionArgs(byte dst, byte src) {
         return Arguments.of(
             Opcode.ADD, IMM_TO_REG, dst, src, add(register(dst), immediate(src)),
             Opcode.ADD, REG_TO_REG, dst, src, add(register(dst), register(src)),
