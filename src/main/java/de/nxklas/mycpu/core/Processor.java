@@ -19,6 +19,12 @@ public class Processor {
         this.pc = 0;
     }
 
+    // Only for testing purposes.
+    Processor(byte[] program, int pc) {
+        this(program);
+        this.pc = pc;
+    }
+
     public int peekRegister(int index) {
         if (index < 0 || index >= registers.length)
             throw new IllegalArgumentException(
@@ -46,7 +52,7 @@ public class Processor {
         return decode(opcode);
     }
 
-    private Instruction decode(byte opcode) {
+    Instruction decode(byte opcode) {
         Tuple<Operand, Operand> dstSrcPair;
 
         switch (Opcode.fromValue(opcode)) {

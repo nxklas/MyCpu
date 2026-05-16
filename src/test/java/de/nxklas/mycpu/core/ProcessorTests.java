@@ -1,12 +1,16 @@
 package de.nxklas.mycpu.core;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static de.nxklas.mycpu.helpers.InstructionFactory.*;
+import static de.nxklas.mycpu.helpers.OperandFactory.*;
 
 import java.util.stream.Stream;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import de.nxklas.mycpu.core.instructions.Instruction;
 
 /*
     IMMEDIATE(0b00),
@@ -20,6 +24,41 @@ import org.junit.jupiter.params.provider.MethodSource;
 public class ProcessorTests {
     private static final byte IMM_TO_REG = AccessMode.encode(AccessMode.REGISTER, AccessMode.IMMEDIATE);
     private static final byte REG_TO_REG = AccessMode.encode(AccessMode.REGISTER, AccessMode.REGISTER);
+
+    private static final Stream<Arguments> decodeDecodesInstructionCorrectly_args() {
+        return Stream.of(
+            createAddArgs((byte) 0x00, (byte) 0x01),
+            createAddArgs((byte) 0x02, (byte) 0x05),
+            createAddArgs((byte) 0x0A, (byte) 0x7F)
+        );
+    }
+
+    private static Arguments createAddArgs(byte dst, byte src) {
+        return Arguments.of(
+            Opcode.ADD, IMM_TO_REG, dst, src, add(register(dst), immediate(src)),
+            Opcode.ADD, REG_TO_REG, dst, src, add(register(dst), register(src)),
+
+            Opcode.CMP, IMM_TO_REG, dst, src, cmp(register(dst), immediate(src)),
+            Opcode.CMP, REG_TO_REG, dst, src, cmp(register(dst), register(src)),
+
+            Opcode.MOV, IMM_TO_REG, dst, src, mov(register(dst), immediate(src)),
+            Opcode.MOV, REG_TO_REG, dst, src, mov(register(dst), register(src)),
+
+            Opcode.SUB, IMM_TO_REG, dst, src, sub(register(dst), immediate(src)),
+            Opcode.SUB, REG_TO_REG, dst, src, sub(register(dst), register(src))
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("decodeDecodesInstructionCorrectly_args")
+    public void decodeDecodesInstructionCorrectly(Opcode opcode, byte accesMode, byte dst, byte src, Instruction result) {
+        var program = new byte[] {
+            opcode.value, accesMode, dst, src
+        };
+        var processor = new Processor(program, 1); // To prevent the opcode being read, we set the program counter to the second instruction.
+        var instruction = processor.decode(opcode.value);
+        assertEquals(instruction, result);
+    }
 
     private static final Stream<Arguments> movImmediateToRegisterExecutesCorrectly_args() {
         return Stream.of(
@@ -99,7 +138,7 @@ public class ProcessorTests {
             Opcode.ADD.value, IMM_TO_REG, dstRegister, srcImmediate
         };
         var processor = new Processor(program);
-        
+
         processor.execute();
         assertEquals(processor.peekRegister(dstRegister), dstValue + srcImmediate);
     }
@@ -128,11 +167,11 @@ public class ProcessorTests {
             Opcode.ADD.value, REG_TO_REG, dstRegister, srcRegister
         };
         var processor = new Processor(program);
-        
+
         processor.execute();
         assertEquals(processor.peekRegister(dstRegister), dstValue + srcValue);
     }
-    
+
     @ParameterizedTest
     @MethodSource("addOrSubImmedaiteToRegisterCalculatesCorrectly_args")
     public void subImmediateToRegisterCaculatesCorrectly(byte dstRegister, byte srcImmediate, byte dstValue) {
@@ -141,7 +180,7 @@ public class ProcessorTests {
             Opcode.SUB.value, IMM_TO_REG, dstRegister, srcImmediate
         };
         var processor = new Processor(program);
-        
+
         processor.execute();
         assertEquals(processor.peekRegister(dstRegister), dstValue - srcImmediate);
     }
@@ -155,7 +194,7 @@ public class ProcessorTests {
             Opcode.SUB.value, REG_TO_REG, dstRegister, srcRegister
         };
         var processor = new Processor(program);
-        
+
         processor.execute();
         assertEquals(processor.peekRegister(dstRegister), dstValue - srcValue);
     }
@@ -201,11 +240,11 @@ public class ProcessorTests {
     @MethodSource("cmpImmediateToRegisterSetsExpectedFalgs_args")
     public void cmpImmediateToRegisterSetsExpectedFalgs(byte dstRegister, byte srcImmediate, byte dstValue, byte expected) {
         var program = new byte[] {
-            Opcode.MOV.value, IMM_TO_REG, dstRegister, dstValue,
-            Opcode.CMP.value, IMM_TO_REG, dstRegister, srcImmediate
+                Opcode.MOV.value, IMM_TO_REG, dstRegister, dstValue,
+                Opcode.CMP.value, IMM_TO_REG, dstRegister, srcImmediate
         };
         var processor = new Processor(program);
-        
+
         processor.execute();
         assertEquals(processor.peekFlags(), expected);
     }
@@ -234,7 +273,7 @@ public class ProcessorTests {
             Opcode.CMP.value, IMM_TO_REG, dstRegister, srcRegister
         };
         var processor = new Processor(program);
-        
+
         processor.execute();
         assertEquals(processor.peekFlags(), expected);
     }
