@@ -155,7 +155,7 @@ public class Processor {
         };
     }
 
-    private void write(Operand dst, int value) {
+    void write(Operand dst, int value) {
         switch (dst) {
             case ImmediateOperand _ -> throw new IllegalArgumentException(
                     "Cannot write to immediate, since writing to is only permitted to registers. Dst operand: "

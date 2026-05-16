@@ -1,6 +1,7 @@
 package de.nxklas.mycpu.core;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static de.nxklas.mycpu.helpers.InstructionFactory.*;
 import static de.nxklas.mycpu.helpers.OperandFactory.*;
 
@@ -91,6 +92,36 @@ public class ProcessorTests {
         processor.writeRegister(index, value);
         var opVal = processor.resolve(operand);
         assertEquals(opVal, value);
+    }
+
+    private static Stream<Arguments> writeThrowsImmediateCorrectly_args() {
+        return Stream.of(
+            Arguments.of(immediate(0x00))
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("writeThrowsImmediateCorrectly_args")
+    public void writeThrowsImmediateCorrectly(ImmediateOperand operand) {
+        var processor = new Processor(null);
+        assertThrows(IllegalArgumentException.class, () -> processor.write(operand, operand.value()),
+                "Cannot write to immediate, since writing to is only permitted to registers. Dst operand: "
+                        + operand + "Src value: " + operand.value());
+    }
+
+    private static Stream<Arguments> writeWritesRegisterCorrectly_args() {
+        return Stream.of(
+            Arguments.of(register(0x00), 0x00, 0x10)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("writeWritesRegisterCorrectly_args")
+    public void writeWritesRegisterCorrectly(RegisterOperand operand, int index, int value) {
+        var processor = new Processor(null);
+        processor.write(operand, value);
+        var writtenVal = processor.peekRegister(index);
+        assertEquals(writtenVal, value);
     }
 
     private static final Stream<Arguments> movImmediateToRegisterExecutesCorrectly_args() {
@@ -273,8 +304,8 @@ public class ProcessorTests {
     @MethodSource("cmpImmediateToRegisterSetsExpectedFalgs_args")
     public void cmpImmediateToRegisterSetsExpectedFalgs(byte dstRegister, byte srcImmediate, byte dstValue, byte expected) {
         var program = new byte[] {
-                Opcode.MOV.value, IMM_TO_REG, dstRegister, dstValue,
-                Opcode.CMP.value, IMM_TO_REG, dstRegister, srcImmediate
+            Opcode.MOV.value, IMM_TO_REG, dstRegister, dstValue,
+            Opcode.CMP.value, IMM_TO_REG, dstRegister, srcImmediate
         };
         var processor = new Processor(program);
 
