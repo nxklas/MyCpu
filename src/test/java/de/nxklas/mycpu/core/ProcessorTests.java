@@ -1,9 +1,6 @@
 package de.nxklas.mycpu.core;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static de.nxklas.mycpu.helpers.InstructionFactory.*;
-import static de.nxklas.mycpu.helpers.OperandFactory.*;
 
 import java.util.stream.Stream;
 
@@ -11,9 +8,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import de.nxklas.mycpu.core.instructions.Instruction;
-import de.nxklas.mycpu.core.operands.ImmediateOperand;
-import de.nxklas.mycpu.core.operands.RegisterOperand;
+import de.nxklas.mycpu.helpers.AccessModes;
 
 /*
     IMMEDIATE(0b00),
@@ -24,106 +19,7 @@ import de.nxklas.mycpu.core.operands.RegisterOperand;
     HALT(0xFF);
 */
 
-public class ProcessorTests {
-    private static final byte IMM_TO_REG = AccessMode.encode(AccessMode.REGISTER, AccessMode.IMMEDIATE);
-    private static final byte REG_TO_REG = AccessMode.encode(AccessMode.REGISTER, AccessMode.REGISTER);
-
-    private static final Stream<Arguments> decodeDecodesInstructionCorrectly_args() {
-        return Stream.of(
-            createInstructionArgs((byte) 0x00, (byte) 0x01),
-            createInstructionArgs((byte) 0x02, (byte) 0x05),
-            createInstructionArgs((byte) 0x0A, (byte) 0x7F)
-        );
-    }
-
-    private static Arguments createInstructionArgs(byte dst, byte src) {
-        return Arguments.of(
-            Opcode.ADD, IMM_TO_REG, dst, src, add(register(dst), immediate(src)),
-            Opcode.ADD, REG_TO_REG, dst, src, add(register(dst), register(src)),
-
-            Opcode.CMP, IMM_TO_REG, dst, src, cmp(register(dst), immediate(src)),
-            Opcode.CMP, REG_TO_REG, dst, src, cmp(register(dst), register(src)),
-
-            Opcode.MOV, IMM_TO_REG, dst, src, mov(register(dst), immediate(src)),
-            Opcode.MOV, REG_TO_REG, dst, src, mov(register(dst), register(src)),
-
-            Opcode.SUB, IMM_TO_REG, dst, src, sub(register(dst), immediate(src)),
-            Opcode.SUB, REG_TO_REG, dst, src, sub(register(dst), register(src))
-        );
-    }
-
-    @ParameterizedTest
-    @MethodSource("decodeDecodesInstructionCorrectly_args")
-    public void decodeDecodesInstructionCorrectly(Opcode opcode, byte accesMode, byte dst, byte src, Instruction result) {
-        var program = new byte[] {
-            opcode.value, accesMode, dst, src
-        };
-        var processor = new Processor(program, 1); // To prevent the opcode being read, we set the program counter to the second instruction.
-        var instruction = processor.decode(opcode.value);
-        assertEquals(instruction, result);
-    }
-
-    private static Stream<Arguments> resolveResolvesImmediateValueCorrectly_args() {
-        return Stream.of(
-            Arguments.of(immediate(0x00), 0x00),
-            Arguments.of(immediate(0x10), 0x10)
-        );
-    }
-
-    @ParameterizedTest
-    @MethodSource("resolveResolvesImmediateValueCorrectly_args")
-    public void resolveResolvesImmediateValueCorrectly(ImmediateOperand operand, int value) {
-        var processor = new Processor(null);
-        var opVal = processor.resolve(operand);
-        assertEquals(opVal, value);
-    }
-
-    private static Stream<Arguments> resolveResolvesRegisterValueCorrectly_args() {
-        return Stream.of(
-            Arguments.of(register(0x00), 0x00, 0x20),
-            Arguments.of(register(0x01), 0x01, 0x10)
-        );
-    }
-
-    @ParameterizedTest
-    @MethodSource("resolveResolvesRegisterValueCorrectly_args")
-    public void resolveResolvesRegisterValueCorrectly(RegisterOperand operand, int index, int value) {
-        var processor = new Processor(null);
-        processor.writeRegister(index, value);
-        var opVal = processor.resolve(operand);
-        assertEquals(opVal, value);
-    }
-
-    private static Stream<Arguments> writeThrowsImmediateCorrectly_args() {
-        return Stream.of(
-            Arguments.of(immediate(0x00))
-        );
-    }
-
-    @ParameterizedTest
-    @MethodSource("writeThrowsImmediateCorrectly_args")
-    public void writeThrowsImmediateCorrectly(ImmediateOperand operand) {
-        var processor = new Processor(null);
-        assertThrows(IllegalArgumentException.class, () -> processor.write(operand, operand.value()),
-                "Cannot write to immediate, since writing to is only permitted to registers. Dst operand: "
-                        + operand + "Src value: " + operand.value());
-    }
-
-    private static Stream<Arguments> writeWritesRegisterCorrectly_args() {
-        return Stream.of(
-            Arguments.of(register(0x00), 0x00, 0x10)
-        );
-    }
-
-    @ParameterizedTest
-    @MethodSource("writeWritesRegisterCorrectly_args")
-    public void writeWritesRegisterCorrectly(RegisterOperand operand, int index, int value) {
-        var processor = new Processor(null);
-        processor.write(operand, value);
-        var writtenVal = processor.peekRegister(index);
-        assertEquals(writtenVal, value);
-    }
-
+public final class ProcessorTests implements AccessModes {
     private static final Stream<Arguments> movImmediateToRegisterExecutesCorrectly_args() {
         return Stream.of(
             Arguments.of((byte) 0x00, (byte) 0x10),

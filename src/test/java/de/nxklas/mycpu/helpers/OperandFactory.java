@@ -3,7 +3,7 @@ package de.nxklas.mycpu.helpers;
 import de.nxklas.mycpu.core.operands.ImmediateOperand;
 import de.nxklas.mycpu.core.operands.RegisterOperand;
 
-public class OperandFactory {
+public final class OperandFactory {
     public static ImmediateOperand immediate(int value) {
         return new ImmediateOperand(value);
     }

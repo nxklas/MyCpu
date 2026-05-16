@@ -6,7 +6,7 @@ import de.nxklas.mycpu.core.instructions.MovInstruction;
 import de.nxklas.mycpu.core.instructions.SubInstruction;
 import de.nxklas.mycpu.core.operands.Operand;
 
-public class InstructionFactory {
+public final class InstructionFactory {
     public static AddInstruction add(Operand dst, Operand src) {
         return new AddInstruction(dst, src);
     }
