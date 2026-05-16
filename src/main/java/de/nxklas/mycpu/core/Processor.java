@@ -93,27 +93,27 @@ public class Processor {
     }
 
     private void mov(MovInstruction instruction) {
-        var srcValue = resolve(instruction.src);
-        write(instruction.dst, srcValue);
+        var srcValue = resolve(instruction.src());
+        write(instruction.dst(), srcValue);
     }
 
     private void add(AddInstruction instruction) {
-        var dstValue = resolve(instruction.dst);
-        var srcValue = resolve(instruction.src);
+        var dstValue = resolve(instruction.dst());
+        var srcValue = resolve(instruction.src());
         var newValue = alu.add(dstValue, srcValue);
-        write(instruction.dst, newValue);
+        write(instruction.dst(), newValue);
     }
 
     private void sub(SubInstruction instruction) {
-        var dstValue = resolve(instruction.dst);
-        var srcValue = resolve(instruction.src);
+        var dstValue = resolve(instruction.dst());
+        var srcValue = resolve(instruction.src());
         var newValue = alu.sub(dstValue, srcValue);
-        write(instruction.dst, newValue);
+        write(instruction.dst(), newValue);
     }
 
     private void cmp(CmpInstruction instruction) {
-        var dstValue = resolve(instruction.dst);
-        var srcValue = resolve(instruction.src);
+        var dstValue = resolve(instruction.dst());
+        var srcValue = resolve(instruction.src());
         var _ = alu.sub(dstValue, srcValue);
     }
 
@@ -136,8 +136,8 @@ public class Processor {
 
     private int resolve(Operand op) {
         return switch (op) {
-            case ImmediateOperand i -> i.value;
-            case RegisterOperand i -> registers[i.index];
+            case ImmediateOperand i -> i.value();
+            case RegisterOperand i -> registers[i.index()];
             default -> throw new IllegalArgumentException("Unexpected operand to resolve: " + op);
         };
     }
@@ -147,7 +147,7 @@ public class Processor {
             case ImmediateOperand _ -> throw new IllegalArgumentException(
                     "Cannot write to immediate, since writing to is only permitted to registers. Dst operand: "
                             + dst + "Src value: " + value);
-            case RegisterOperand register -> registers[register.index] = value;
+            case RegisterOperand register -> registers[register.index()] = value;
             default -> throw new IllegalArgumentException("Unexpected dst operand: " + dst + "Src value: " + value);
         }
     }

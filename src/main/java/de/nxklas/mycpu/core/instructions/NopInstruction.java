@@ -1,6 +1,6 @@
 package de.nxklas.mycpu.core.instructions;
 
-public final class NopInstruction implements Instruction{
-    public NopInstruction() {
-    }
+import de.nxklas.mycpu.core.operands.Operand;
+
+public final record NopInstruction(Operand dst, Operand src) implements Instruction {
 }
