@@ -43,6 +43,10 @@ public class Processor {
         return alu.flags();
     }
 
+    int peekProgramCounter() {
+        return pc;
+    }
+
     public void execute() {
         isRunning = true;
         while (isRunning && pc < program.length) {
