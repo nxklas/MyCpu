@@ -77,11 +77,22 @@ public class Processor {
             case CMP:
                 dstSrcPair = readDstSrcPair();
                 return new CmpInstruction(dstSrcPair.value1, dstSrcPair.value2);
+            case JMP:
+                return new JmpInstruction(JmpKind.None, readDst());
+            case JMP_EQUALS:
+                return new JmpInstruction(JmpKind.Equals, readDst());
+            case JMP_NOTEQUALS:
+                return new JmpInstruction(JmpKind.NotEquals, readDst());
             case HALT:
                 return new HaltInstruction();
             default:
                 throw new IllegalArgumentException("Unexpected opcode in instruction decode: " + opcode);
         }
+    }
+
+    private Operand readDst() {
+        var dst = AccessMode.fromValue(next());
+        return readOperand(dst);
     }
 
     private Tuple<Operand, Operand> readDstSrcPair() {
@@ -98,6 +109,7 @@ public class Processor {
             case AddInstruction addInstruction -> add(addInstruction);
             case SubInstruction subInstruction -> sub(subInstruction);
             case CmpInstruction cmpInstruction -> cmp(cmpInstruction);
+            case JmpInstruction jmpInstruction -> jmp(jmpInstruction);
             case HaltInstruction _ -> halt();
         }
     }
@@ -128,6 +140,36 @@ public class Processor {
         var dstValue = resolve(instruction.dst());
         var srcValue = resolve(instruction.src());
         var _ = alu.sub(dstValue, srcValue);
+    }
+
+    private void jmp(JmpInstruction instruction) {
+        var dstValue = resolve(instruction.dst());
+
+        switch (instruction.kind()) {
+            case None:
+                jmp(dstValue);
+                break;
+            case Equals:
+            case NotEquals:
+            case Less:
+            case LessOrEquals:
+            case Greater:
+            case GreaterOrEquals:
+                var condition = (instruction.kind().value & alu.flags()) != 0;
+                if (condition)
+                    jmp(dstValue);
+                else
+                    next();
+                break;
+            default:
+                throw new IllegalArgumentException("Unexpected jmp kind: " + instruction.kind());
+        }
+    }
+
+    private void jmp(int dst) {
+        if (dst < 0 || dst >= program.length)
+            throw new IllegalArgumentException("Cannot jump to " + dst);
+        pc = dst;
     }
 
     private void halt() {
