@@ -1,6 +1,7 @@
 package de.nxklas.mycpu.core;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import java.util.stream.Stream;
 
@@ -261,6 +262,29 @@ public final class ProcessorTests implements AccessModes {
         assertEquals(processor.peekProgramCounter(), jmpTo + 1); // We need to add jmpTo by 1, because in the last execute iteration when HALT gets decoded, the call of next() auto-increments the pc.
     }
 
+    private static final Stream<Arguments> jmpEqualsFails_args() {
+        return Stream.of(
+            Arguments.of((byte) 0x00, (byte) 0x01),
+            Arguments.of((byte) 0x09, (byte) 0x08),
+            Arguments.of((byte) 0x01, (byte) 0x03)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("jmpEqualsFails_args")
+    public void jmpEqualsFails(byte cmpA, byte cmpB) {
+        byte jmpTo = 0x00;
+        var program = new byte[] {
+            Opcode.CMP.value, IMM_TO_IMM, cmpA, cmpB,
+            Opcode.JMP_EQUALS.value, IMM, jmpTo,
+            Opcode.HALT.value
+        };
+        var processor = new Processor(program);
+
+        processor.execute();
+        assertNotEquals(processor.peekProgramCounter(), jmpTo + 1); // We need to add jmpTo by 1, because in the last execute iteration when HALT gets decoded, the call of next() auto-increments the pc.
+    }
+
     private static final Stream<Arguments> jmpNotEquals_args() {
         return Stream.of(
             Arguments.of((byte) 0x00, (byte) 0x01),
@@ -282,5 +306,28 @@ public final class ProcessorTests implements AccessModes {
 
         processor.execute();
         assertEquals(processor.peekProgramCounter(), jmpTo + 1); // We need to add jmpTo by 1, because in the last execute iteration when HALT gets decoded, the next() call auto-increments the pc.
+    }
+
+    private static final Stream<Arguments> jmpNotEqualsFails_args() {
+        return Stream.of(
+            Arguments.of((byte) 0x00),
+            Arguments.of((byte) 0x09),
+            Arguments.of((byte) 0x02)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("jmpNotEqualsFails_args")
+    public void jmpNotEqualsFails(byte cmpA) {
+        byte jmpTo = 0x00;
+        var program = new byte[] {
+            Opcode.CMP.value, IMM_TO_IMM, cmpA, cmpA,
+            Opcode.JMP_NOTEQUALS.value, IMM, jmpTo,
+            Opcode.HALT.value
+        };
+        var processor = new Processor(program);
+
+        processor.execute();
+        assertNotEquals(processor.peekProgramCounter(), jmpTo + 1); // We need to add jmpTo by 1, because in the last execute iteration when HALT gets decoded, the next() call auto-increments the pc.
     }
 }
