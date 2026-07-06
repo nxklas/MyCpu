@@ -24,23 +24,26 @@ public final class ProcessorWriterTests {
     @MethodSource("throwsOnImmediate_args")
     public void throwsOnImmediate(ImmediateOperand operand) {
         var processor = new Processor(null);
-        assertThrows(IllegalArgumentException.class, () -> processor.write(operand, operand.value()),
-                "Cannot write to immediate, since writing to is only permitted to registers. Dst operand: "
-                        + operand + "Src value: " + operand.value());
+        var ex = assertThrows(IllegalArgumentException.class, () -> processor.write(operand, operand.value()),
+            "Ecpected IllegalArgumentException"
+        );
+        assertEquals("Cannot write to immediate, since writing to is only permitted to registers. Dst operand: "
+            + operand + "Src value: " + operand.value(), ex.getMessage()
+        );
     }
 
     private static Stream<Arguments> writesCorrectRegister_args() {
         return Stream.of(
-            Arguments.of(register(0x00), 0x00, 0x10)
+            Arguments.of(register(0x00), 0x00, (byte) 0x10)
         );
     }
 
     @ParameterizedTest
     @MethodSource("writesCorrectRegister_args")
-    public void writesCorrectRegister(RegisterOperand operand, int index, int value) {
+    public void writesCorrectRegister(RegisterOperand operand, int index, byte value) {
         var processor = new Processor(null);
         processor.write(operand, value);
         var writtenVal = processor.peekRegister(index);
-        assertEquals(writtenVal, value);
+        assertEquals(value, writtenVal);
     }
 }

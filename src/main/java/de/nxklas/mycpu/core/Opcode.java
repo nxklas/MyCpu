@@ -9,6 +9,10 @@ public enum Opcode {
     JMP(0x50),
     JMP_EQUALS(0x51),
     JMP_NOTEQUALS(0x52),
+    JMP_LESS(0x53),
+    JMP_LESS_OR_EQUALS(0x54),
+    JMP_GREATER(0x55),
+    JMP_GREATER_OR_EQUALS(0x56),
     HALT(0xFF);
 
     public final byte value;

@@ -8,8 +8,8 @@ public enum JmpKind {
     NotEquals(Alu.FLAG_NEG | Alu.FLAG_CARRY),
     Less(Alu.FLAG_NEG),
     LessOrEquals(Alu.FLAG_NEG | Alu.FLAG_ZERO),
-    Greater(Alu.FLAG_CARRY),
-    GreaterOrEquals(Alu.FLAG_CARRY | Alu.FLAG_ZERO);
+    Greater(Alu.FLAG_NONE),
+    GreaterOrEquals(Alu.FLAG_NONE | Alu.FLAG_ZERO);
 
     public final byte value;
 

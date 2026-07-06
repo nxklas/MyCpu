@@ -33,7 +33,7 @@ public final class AccessModeTests {
     @ParameterizedTest
     @MethodSource("modesToValue")
     public void encodeComputesCorrectValues(AccessMode dst, AccessMode src, byte expected) {
-        assertEquals(AccessMode.encode(dst, src), expected);
+        assertEquals(expected, AccessMode.encode(dst, src));
     }
 
     @ParameterizedTest
@@ -41,27 +41,29 @@ public final class AccessModeTests {
     public void decodeComputesCorrectValues(AccessMode expectedDst, AccessMode expectedSrc, byte mode) {
         var modes = AccessMode.decode(mode);
         assertAll(
-            () -> assertEquals(modes.value1, expectedDst),
-            () -> assertEquals(modes.value2, expectedSrc)
+            () -> assertEquals(expectedDst, modes.value1),
+            () -> assertEquals(expectedSrc, modes.value2)
         );
     }
 
     private static Set<AccessMode> validAccessModes() {
         return Arrays.stream(AccessMode.values())
             .map(mode -> mode)
-            .collect(Collectors.toSet());
+            .collect(Collectors.toSet()
+        );
     }
 
     @Test
     public void fromValueReturnsCorrectModeForGivenValidValue() {
-        for (AccessMode mode : validAccessModes())
+        for (var mode : validAccessModes())
             assertEquals(mode, AccessMode.fromValue(mode.value));
     }
 
     private static Set<Byte> validAccessModeValues() {
         return Arrays.stream(AccessMode.values())
             .map(mode -> mode.value)
-            .collect(Collectors.toSet());
+            .collect(Collectors.toSet()
+        );
     }
 
     @Test
@@ -69,9 +71,12 @@ public final class AccessModeTests {
         var validValues = validAccessModeValues();
         for (int i = Byte.MIN_VALUE; i <= Byte.MAX_VALUE; i++) {
             final byte value = (byte) i;
-            if (!validValues.contains(value))
-                assertThrows(IllegalArgumentException.class, () -> AccessMode.fromValue(value),
-                    "Argument 'value' was not a supported access mode: " + value);
+            if (!validValues.contains(value)) {
+                var ex = assertThrows(IllegalArgumentException.class, () -> AccessMode.fromValue(value),
+                    "Expected IllegalArgumentException"
+                );
+                assertEquals("Argument 'value' was not a supported access mode: " + value, ex.getMessage());
+            }
         }
     }
 }

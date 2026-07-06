@@ -87,6 +87,14 @@ public class Processor {
                 return new JmpInstruction(JmpKind.Equals, readDst());
             case JMP_NOTEQUALS:
                 return new JmpInstruction(JmpKind.NotEquals, readDst());
+            case JMP_LESS:
+                return new JmpInstruction(JmpKind.Less, readDst());
+            case JMP_LESS_OR_EQUALS:
+                return new JmpInstruction(JmpKind.LessOrEquals, readDst());
+            case JMP_GREATER:
+                return new JmpInstruction(JmpKind.Greater, readDst());
+            case JMP_GREATER_OR_EQUALS:
+                return new JmpInstruction(JmpKind.GreaterOrEquals, readDst());
             case HALT:
                 return new HaltInstruction();
             default:

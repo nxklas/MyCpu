@@ -3,6 +3,7 @@ package de.nxklas.mycpu.core;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static de.nxklas.mycpu.helpers.InstructionFactory.*;
 import static de.nxklas.mycpu.helpers.OperandFactory.*;
+import static de.nxklas.mycpu.helpers.Bytecode.*;
 
 import java.util.stream.Stream;
 
@@ -11,9 +12,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import de.nxklas.mycpu.core.instructions.Instruction;
-import de.nxklas.mycpu.helpers.AccessModes;
 
-public final class ProcessorDecoderTests implements AccessModes {
+public final class ProcessorDecoderTests {
     private static final Stream<Arguments> decodesCorrectInstruction_args() {
         return Stream.of(
             createInstructionArgs((byte) 0x00, (byte) 0x01),
@@ -24,28 +24,29 @@ public final class ProcessorDecoderTests implements AccessModes {
 
     private static Arguments createInstructionArgs(byte dst, byte src) {
         return Arguments.of(
-            Opcode.ADD, IMM_TO_REG, dst, src, add(register(dst), immediate(src)),
-            Opcode.ADD, REG_TO_REG, dst, src, add(register(dst), register(src)),
+            ADD, IMM_TO_REG, dst, src, add(register(dst), immediate(src)),
+            ADD, REG_TO_REG, dst, src, add(register(dst), register(src)),
 
-            Opcode.CMP, IMM_TO_REG, dst, src, cmp(register(dst), immediate(src)),
-            Opcode.CMP, REG_TO_REG, dst, src, cmp(register(dst), register(src)),
+            CMP, IMM_TO_REG, dst, src, cmp(register(dst), immediate(src)),
+            CMP, REG_TO_REG, dst, src, cmp(register(dst), register(src)),
 
-            Opcode.MOV, IMM_TO_REG, dst, src, mov(register(dst), immediate(src)),
-            Opcode.MOV, REG_TO_REG, dst, src, mov(register(dst), register(src)),
+            MOV, IMM_TO_REG, dst, src, mov(register(dst), immediate(src)),
+            MOV, REG_TO_REG, dst, src, mov(register(dst), register(src)),
 
-            Opcode.SUB, IMM_TO_REG, dst, src, sub(register(dst), immediate(src)),
-            Opcode.SUB, REG_TO_REG, dst, src, sub(register(dst), register(src))
+            SUB, IMM_TO_REG, dst, src, sub(register(dst), immediate(src)),
+            SUB, REG_TO_REG, dst, src, sub(register(dst), register(src))
         );
     }
 
     @ParameterizedTest
     @MethodSource("decodesCorrectInstruction_args")
-    public void decodesCorrectInstruction(Opcode opcode, byte accesMode, byte dst, byte src, Instruction result) {
+    public void decodesCorrectInstruction(byte opcode, byte accesMode, byte dst, byte src, Instruction result) {
         var program = new byte[] {
-            opcode.value, accesMode, dst, src
+            opcode, accesMode, dst, src
         };
-        var processor = new Processor(program, 1); // To prevent the opcode being read, we set the program counter to the second instruction.
-        var instruction = processor.decode(opcode.value);
-        assertEquals(instruction, result);
+        var processor = new Processor(program, 1); // To prevent the opcode being read, we set the program counter to
+                                                      // the second instruction.
+        var instruction = processor.decode(opcode);
+        assertEquals(result, instruction);
     }
 }

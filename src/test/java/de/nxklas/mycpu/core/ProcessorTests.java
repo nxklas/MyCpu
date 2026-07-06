@@ -2,14 +2,13 @@ package de.nxklas.mycpu.core;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static de.nxklas.mycpu.helpers.Bytecode.*;
 
 import java.util.stream.Stream;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-
-import de.nxklas.mycpu.helpers.AccessModes;
 
 /*
     IMMEDIATE(0b00),
@@ -20,7 +19,7 @@ import de.nxklas.mycpu.helpers.AccessModes;
     HALT(0xFF);
 */
 
-public final class ProcessorTests implements AccessModes {
+public final class ProcessorTests {
     private static final Stream<Arguments> movImmediateToRegisterExecutesCorrectly_args() {
         return Stream.of(
             Arguments.of((byte) 0x00, (byte) 0x10),
@@ -40,12 +39,12 @@ public final class ProcessorTests implements AccessModes {
     @MethodSource("movImmediateToRegisterExecutesCorrectly_args")
     public void movImmediateToRegisterExecutesCorrectly(byte dstRegister, byte srcImmediate) {
         var program = new byte[] {
-            Opcode.MOV.value, IMM_TO_REG, dstRegister, srcImmediate
+            MOV, IMM_TO_REG, dstRegister, srcImmediate
         };
         var processor = new Processor(program);
 
         processor.execute();
-        assertEquals(processor.peekRegister(dstRegister), srcImmediate);
+        assertEquals(Byte.toUnsignedInt(srcImmediate), processor.peekRegister(dstRegister));
     }
 
     private static final Stream<Arguments> movRegisterToRegisterExecutesCorrectly_args() {
@@ -67,13 +66,13 @@ public final class ProcessorTests implements AccessModes {
     @MethodSource("movRegisterToRegisterExecutesCorrectly_args")
     public void movRegisterToRegisterExecutesCorrectly(byte dstRegister, byte srcRegister, byte immediate) {
         var program = new byte[] {
-            Opcode.MOV.value, IMM_TO_REG, srcRegister, immediate,
-            Opcode.MOV.value, REG_TO_REG, dstRegister, srcRegister
+            MOV, IMM_TO_REG, srcRegister, immediate,
+            MOV, REG_TO_REG, dstRegister, srcRegister
         };
         var processor = new Processor(program);
 
         processor.execute();
-        assertEquals(processor.peekRegister(dstRegister), immediate);
+        assertEquals(Byte.toUnsignedInt(immediate), processor.peekRegister(dstRegister));
     }
 
     private static final Stream<Arguments> addOrSubImmedaiteToRegisterCalculatesCorrectly_args() {
@@ -95,13 +94,13 @@ public final class ProcessorTests implements AccessModes {
     @MethodSource("addOrSubImmedaiteToRegisterCalculatesCorrectly_args")
     public void addImmediateToRegisterCaculatesCorrectly(byte dstRegister, byte srcImmediate, byte dstValue) {
         var program = new byte[] {
-            Opcode.MOV.value, IMM_TO_REG, dstRegister, dstValue,
-            Opcode.ADD.value, IMM_TO_REG, dstRegister, srcImmediate
+            MOV, IMM_TO_REG, dstRegister, dstValue,
+            ADD, IMM_TO_REG, dstRegister, srcImmediate
         };
         var processor = new Processor(program);
 
         processor.execute();
-        assertEquals(processor.peekRegister(dstRegister), dstValue + srcImmediate);
+        assertEquals(Byte.toUnsignedInt((byte) (dstValue + srcImmediate)), processor.peekRegister(dstRegister));
     }
 
     private static final Stream<Arguments> addOrSubRegisterToRegisterCalculatesCorrectly_args() {
@@ -123,77 +122,53 @@ public final class ProcessorTests implements AccessModes {
     @MethodSource("addOrSubRegisterToRegisterCalculatesCorrectly_args")
     public void addRegisterToRegisterCaculatesCorrectly(byte dstRegister, byte srcRegister, byte dstValue, byte srcValue) {
         var program = new byte[] {
-            Opcode.MOV.value, IMM_TO_REG, dstRegister, dstValue,
-            Opcode.MOV.value, IMM_TO_REG, srcRegister, srcValue,
-            Opcode.ADD.value, REG_TO_REG, dstRegister, srcRegister
+            MOV, IMM_TO_REG, dstRegister, dstValue,
+            MOV, IMM_TO_REG, srcRegister, srcValue,
+            ADD, REG_TO_REG, dstRegister, srcRegister
         };
         var processor = new Processor(program);
 
         processor.execute();
-        assertEquals(processor.peekRegister(dstRegister), dstValue + srcValue);
+        assertEquals(Byte.toUnsignedInt((byte) (dstValue + srcValue)), processor.peekRegister(dstRegister));
     }
 
     @ParameterizedTest
     @MethodSource("addOrSubImmedaiteToRegisterCalculatesCorrectly_args")
     public void subImmediateToRegisterCaculatesCorrectly(byte dstRegister, byte srcImmediate, byte dstValue) {
         var program = new byte[] {
-            Opcode.MOV.value, IMM_TO_REG, dstRegister, dstValue,
-            Opcode.SUB.value, IMM_TO_REG, dstRegister, srcImmediate
+            MOV, IMM_TO_REG, dstRegister, dstValue,
+            SUB, IMM_TO_REG, dstRegister, srcImmediate
         };
         var processor = new Processor(program);
 
         processor.execute();
-        assertEquals(processor.peekRegister(dstRegister), dstValue - srcImmediate);
+        assertEquals(Byte.toUnsignedInt((byte) (dstValue - srcImmediate)), processor.peekRegister(dstRegister));
     }
 
     @ParameterizedTest
     @MethodSource("addOrSubRegisterToRegisterCalculatesCorrectly_args")
     public void subRegisterToRegisterCaculatesCorrectly(byte dstRegister, byte srcRegister, byte dstValue, byte srcValue) {
         var program = new byte[] {
-            Opcode.MOV.value, IMM_TO_REG, dstRegister, dstValue,
-            Opcode.MOV.value, IMM_TO_REG, srcRegister, srcValue,
-            Opcode.SUB.value, REG_TO_REG, dstRegister, srcRegister
+            MOV, IMM_TO_REG, dstRegister, dstValue,
+            MOV, IMM_TO_REG, srcRegister, srcValue,
+            SUB, REG_TO_REG, dstRegister, srcRegister
         };
         var processor = new Processor(program);
 
         processor.execute();
-        assertEquals(processor.peekRegister(dstRegister), dstValue - srcValue);
+        assertEquals(Byte.toUnsignedInt((byte) (dstValue - srcValue)), processor.peekRegister(dstRegister));
     }
 
-    private static final Stream<Arguments> cmpImmediateToRegisterSetsExpectedFalgs_args() {
+    private static Stream<Arguments> cmpImmediateToRegisterSetsExpectedFalgs_args() {
         return Stream.of(
-            Arguments.of((byte) 0x00, (byte) 0x09, (byte) 0x10, Alu.FLAG_NONE),
-            Arguments.of((byte) 0x01, (byte) 0x08, (byte) 0x11, Alu.FLAG_NONE),
-            Arguments.of((byte) 0x02, (byte) 0x07, (byte) 0x12, Alu.FLAG_NONE),
-            Arguments.of((byte) 0x03, (byte) 0x06, (byte) 0x13, Alu.FLAG_NONE),
-            Arguments.of((byte) 0x04, (byte) 0x05, (byte) 0x14, Alu.FLAG_NONE),
-            Arguments.of((byte) 0x05, (byte) 0x04, (byte) 0x15, Alu.FLAG_NONE),
-            Arguments.of((byte) 0x06, (byte) 0x03, (byte) 0x16, Alu.FLAG_NONE),
-            Arguments.of((byte) 0x07, (byte) 0x02, (byte) 0x17, Alu.FLAG_NONE),
-            Arguments.of((byte) 0x08, (byte) 0x01, (byte) 0x18, Alu.FLAG_NONE),
-            Arguments.of((byte) 0x09, (byte) 0x00, (byte) 0x19, Alu.FLAG_NONE),
-
-            Arguments.of((byte) 0x00, (byte) 0x10, (byte) 0x09, Alu.FLAG_NEG),
-            Arguments.of((byte) 0x01, (byte) 0x11, (byte) 0x08, Alu.FLAG_NEG),
-            Arguments.of((byte) 0x02, (byte) 0x12, (byte) 0x07, Alu.FLAG_NEG),
-            Arguments.of((byte) 0x03, (byte) 0x13, (byte) 0x06, Alu.FLAG_NEG),
-            Arguments.of((byte) 0x04, (byte) 0x14, (byte) 0x05, Alu.FLAG_NEG),
-            Arguments.of((byte) 0x05, (byte) 0x15, (byte) 0x04, Alu.FLAG_NEG),
-            Arguments.of((byte) 0x06, (byte) 0x16, (byte) 0x03, Alu.FLAG_NEG),
-            Arguments.of((byte) 0x07, (byte) 0x17, (byte) 0x02, Alu.FLAG_NEG),
-            Arguments.of((byte) 0x08, (byte) 0x18, (byte) 0x01, Alu.FLAG_NEG),
-            Arguments.of((byte) 0x09, (byte) 0x19, (byte) 0x00, Alu.FLAG_NEG),
-
-            Arguments.of((byte) 0x00, (byte) 0x09, (byte) 0x09, Alu.FLAG_ZERO),
-            Arguments.of((byte) 0x01, (byte) 0x08, (byte) 0x08, Alu.FLAG_ZERO),
-            Arguments.of((byte) 0x02, (byte) 0x07, (byte) 0x07, Alu.FLAG_ZERO),
-            Arguments.of((byte) 0x03, (byte) 0x06, (byte) 0x06, Alu.FLAG_ZERO),
-            Arguments.of((byte) 0x04, (byte) 0x05, (byte) 0x05, Alu.FLAG_ZERO),
-            Arguments.of((byte) 0x05, (byte) 0x04, (byte) 0x04, Alu.FLAG_ZERO),
-            Arguments.of((byte) 0x06, (byte) 0x03, (byte) 0x03, Alu.FLAG_ZERO),
-            Arguments.of((byte) 0x07, (byte) 0x02, (byte) 0x02, Alu.FLAG_ZERO),
-            Arguments.of((byte) 0x08, (byte) 0x01, (byte) 0x01, Alu.FLAG_ZERO),
-            Arguments.of((byte) 0x09, (byte) 0x00, (byte) 0x00, Alu.FLAG_ZERO)
+            Arguments.of((byte) 0x00, (byte) 5, (byte) 5, Alu.FLAG_ZERO),
+            Arguments.of((byte) 0x01, (byte) 3, (byte) 5, Alu.FLAG_NONE),
+            Arguments.of((byte) 0x02, (byte) 5, (byte) 3, (byte) (Alu.FLAG_NEG | Alu.FLAG_CARRY)),
+            Arguments.of((byte) 0x03, (byte) 1, (byte) 0, (byte) (Alu.FLAG_NEG | Alu.FLAG_CARRY)),
+            Arguments.of((byte) 0x04, (byte) 127, (byte) 127, Alu.FLAG_ZERO),
+            Arguments.of((byte) 0x05, (byte) -128, (byte) -128, Alu.FLAG_ZERO),
+            Arguments.of((byte) 0x06, (byte) -2, (byte) -1, Alu.FLAG_NONE),
+            Arguments.of((byte) 0x07, (byte) -1, (byte) -2, (byte) (Alu.FLAG_NEG | Alu.FLAG_CARRY))
         );
     }
 
@@ -201,27 +176,66 @@ public final class ProcessorTests implements AccessModes {
     @MethodSource("cmpImmediateToRegisterSetsExpectedFalgs_args")
     public void cmpImmediateToRegisterSetsExpectedFalgs(byte dstRegister, byte srcImmediate, byte dstValue, byte expected) {
         var program = new byte[] {
-            Opcode.MOV.value, IMM_TO_REG, dstRegister, dstValue,
-            Opcode.CMP.value, IMM_TO_REG, dstRegister, srcImmediate
+            MOV, IMM_TO_REG, dstRegister, dstValue,
+            CMP, IMM_TO_REG, dstRegister, srcImmediate
         };
         var processor = new Processor(program);
 
         processor.execute();
-        assertEquals(processor.peekFlags(), expected);
+        assertEquals(expected, processor.peekFlags());
     }
 
-    private static final Stream<Arguments> cmpRegisterToRegisterSetsExpectedFalgs_args() {
+    private static Stream<Arguments> cmpImmediateToImmediateSetsExpectedFlags_args() {
         return Stream.of(
-            Arguments.of((byte) 0x00, (byte) 0x09, (byte) 0x10, (byte) 0x00, Alu.FLAG_NONE),
-            Arguments.of((byte) 0x01, (byte) 0x08, (byte) 0x11, (byte) 0x01, Alu.FLAG_NONE),
-            Arguments.of((byte) 0x02, (byte) 0x07, (byte) 0x12, (byte) 0x02, Alu.FLAG_NONE),
-            Arguments.of((byte) 0x03, (byte) 0x06, (byte) 0x13, (byte) 0x03, Alu.FLAG_NONE),
-            Arguments.of((byte) 0x04, (byte) 0x05, (byte) 0x14, (byte) 0x04, Alu.FLAG_NONE),
-            Arguments.of((byte) 0x05, (byte) 0x04, (byte) 0x15, (byte) 0x05, Alu.FLAG_NONE),
-            Arguments.of((byte) 0x06, (byte) 0x03, (byte) 0x16, (byte) 0x06, Alu.FLAG_NONE),
-            Arguments.of((byte) 0x07, (byte) 0x02, (byte) 0x17, (byte) 0x07, Alu.FLAG_NONE),
-            Arguments.of((byte) 0x08, (byte) 0x01, (byte) 0x18, (byte) 0x08, Alu.FLAG_NONE),
-            Arguments.of((byte) 0x09, (byte) 0x00, (byte) 0x19, (byte) 0x09, Alu.FLAG_NONE)
+            Arguments.of((byte) 0, (byte) 0, Alu.FLAG_ZERO),
+            Arguments.of((byte) 5, (byte) 5, Alu.FLAG_ZERO),
+            Arguments.of((byte) -1, (byte) -1, Alu.FLAG_ZERO),
+            Arguments.of((byte) 5, (byte) 3, Alu.FLAG_NONE),
+            Arguments.of((byte) 127, (byte) 0, Alu.FLAG_NONE),
+            Arguments.of((byte) -1, (byte) -2, Alu.FLAG_NONE),
+            Arguments.of((byte) 3, (byte) 5, (byte) (Alu.FLAG_NEG | Alu.FLAG_CARRY)),
+            Arguments.of((byte) 0, (byte) 1, (byte) (Alu.FLAG_NEG | Alu.FLAG_CARRY)),
+            Arguments.of((byte) -2, (byte) -1, (byte) (Alu.FLAG_NEG | Alu.FLAG_CARRY))
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("cmpImmediateToImmediateSetsExpectedFlags_args")
+    public void cmpImmediateToImmediateSetsExpectedFlags(byte left, byte right, byte expected) {
+        var program = new byte[] {
+            CMP, IMM_TO_IMM, left, right
+        };
+        var processor = new Processor(program);
+
+        processor.execute();
+        assertEquals(expected, processor.peekFlags());
+    }
+
+    private static Stream<Arguments> cmpRegisterToRegisterSetsExpectedFalgs_args() {
+        return Stream.of(
+            Arguments.of((byte) 0x01, (byte) 0x02, (byte) 0, (byte) 0, Alu.FLAG_ZERO),
+            Arguments.of((byte) 0x00, (byte) 0x01, (byte) 42, (byte) 42, Alu.FLAG_ZERO),
+            Arguments.of((byte) 0x02, (byte) 0x00, (byte) -1, (byte) -1, Alu.FLAG_ZERO),
+
+            Arguments.of((byte) 0x03, (byte) 0x09, (byte) 5, (byte) 3, Alu.FLAG_NONE),
+            Arguments.of((byte) 0x04, (byte) 0x08, (byte) 127, (byte) 126, Alu.FLAG_NONE),
+            Arguments.of((byte) 0x05, (byte) 0x07, (byte) -1, (byte) -2, Alu.FLAG_NONE),
+
+            Arguments.of((byte) 0x06, (byte) 0x05, (byte) 3, (byte) 5, (byte) (Alu.FLAG_NEG | Alu.FLAG_CARRY)),
+            Arguments.of((byte) 0x07, (byte) 0x05, (byte) 0, (byte) 1, (byte) (Alu.FLAG_NEG | Alu.FLAG_CARRY)),
+            Arguments.of((byte) 0x08, (byte) 0x04, (byte) -2, (byte) -1, (byte) (Alu.FLAG_NEG | Alu.FLAG_CARRY)),
+
+            Arguments.of((byte) 0x09, (byte) 0x03, (byte) 0xFF, (byte) 0xFF, Alu.FLAG_ZERO),
+            Arguments.of((byte) 0x00, (byte) 0x02, (byte) 0x80, (byte) 0x80, Alu.FLAG_ZERO),
+            Arguments.of((byte) 0x01, (byte) 0x00, (byte) 0x80, (byte) 0xFF, (byte) (Alu.FLAG_NEG | Alu.FLAG_CARRY)),
+            Arguments.of((byte) 0x02, (byte) 0x01, (byte) 0xFF, (byte) 0x80, Alu.FLAG_NONE),
+
+            Arguments.of((byte) 0x03, (byte) 0x02, (byte) 0x12, (byte) 0x12, Alu.FLAG_ZERO),
+            Arguments.of((byte) 0x00, (byte) 0x01, (byte) 0x00, (byte) 0x01, (byte) (Alu.FLAG_NEG | Alu.FLAG_CARRY)),
+            Arguments.of((byte) 0x01, (byte) 0x02, (byte) 0x10, (byte) 0x11, (byte) (Alu.FLAG_NEG | Alu.FLAG_CARRY)),
+            Arguments.of((byte) 0x02, (byte) 0x01, (byte) 0xFF, (byte) 0x01, Alu.FLAG_NEG),
+            Arguments.of((byte) 0x00, (byte) 0x01, (byte) 0x00, (byte) 0x00, Alu.FLAG_ZERO),
+            Arguments.of((byte) 0x01, (byte) 0x00, (byte) 0x01, (byte) 0x00, Alu.FLAG_NONE)
         );
     }
 
@@ -229,14 +243,14 @@ public final class ProcessorTests implements AccessModes {
     @MethodSource("cmpRegisterToRegisterSetsExpectedFalgs_args")
     public void cmpRegisterToRegisterSetsExpectedFalgs(byte dstRegister, byte srcRegister, byte dstValue, byte srcValue, byte expected) {
         var program = new byte[] {
-            Opcode.MOV.value, IMM_TO_REG, dstRegister, dstValue,
-            Opcode.MOV.value, IMM_TO_REG, srcRegister, srcValue,
-            Opcode.CMP.value, IMM_TO_REG, dstRegister, srcRegister
+            MOV, IMM_TO_REG, dstRegister, dstValue,
+            MOV, IMM_TO_REG, srcRegister, srcValue,
+            CMP, REG_TO_REG, dstRegister, srcRegister
         };
         var processor = new Processor(program);
 
         processor.execute();
-        assertEquals(processor.peekFlags(), expected);
+        assertEquals(expected, processor.peekFlags());
     }
 
     private static final Stream<Arguments> jmpEquals_args() {
@@ -252,14 +266,16 @@ public final class ProcessorTests implements AccessModes {
     public void jmpEquals(byte cmpA) {
         byte jmpTo = 0x07;
         var program = new byte[] {
-            Opcode.CMP.value, IMM_TO_IMM, cmpA, cmpA,
-            Opcode.JMP_EQUALS.value, IMM, jmpTo,
-            Opcode.HALT.value
+            CMP, IMM_TO_IMM, cmpA, cmpA,
+            JMP_EQUALS, IMM, jmpTo,
+            HALT
         };
         var processor = new Processor(program);
 
         processor.execute();
-        assertEquals(processor.peekProgramCounter(), jmpTo + 1); // We need to add jmpTo by 1, because in the last execute iteration when HALT gets decoded, the call of next() auto-increments the pc.
+        assertEquals(jmpTo + 1, processor.peekProgramCounter()); // We need to add jmpTo by 1, because in the last
+                                                                 // execute iteration when HALT gets decoded, the call
+                                                                 // of next() auto-increments the pc.
     }
 
     private static final Stream<Arguments> jmpEqualsFails_args() {
@@ -275,14 +291,14 @@ public final class ProcessorTests implements AccessModes {
     public void jmpEqualsFails(byte cmpA, byte cmpB) {
         byte jmpTo = 0x00;
         var program = new byte[] {
-            Opcode.CMP.value, IMM_TO_IMM, cmpA, cmpB,
-            Opcode.JMP_EQUALS.value, IMM, jmpTo,
-            Opcode.HALT.value
+            CMP, IMM_TO_IMM, cmpA, cmpB,
+            JMP_EQUALS, IMM, jmpTo,
+            HALT
         };
         var processor = new Processor(program);
 
         processor.execute();
-        assertNotEquals(processor.peekProgramCounter(), jmpTo + 1); // We need to add jmpTo by 1, because in the last execute iteration when HALT gets decoded, the call of next() auto-increments the pc.
+        assertNotEquals(jmpTo + 1, processor.peekProgramCounter());
     }
 
     private static final Stream<Arguments> jmpNotEquals_args() {
@@ -298,14 +314,14 @@ public final class ProcessorTests implements AccessModes {
     public void jmpNotEquals(byte cmpA, byte cmpB) {
         byte jmpTo = 0x07;
         var program = new byte[] {
-            Opcode.CMP.value, IMM_TO_IMM, cmpA, cmpB,
-            Opcode.JMP_NOTEQUALS.value, IMM, jmpTo,
-            Opcode.HALT.value
+            CMP, IMM_TO_IMM, cmpA, cmpB,
+            JMP_NOTEQUALS, IMM, jmpTo,
+            HALT
         };
         var processor = new Processor(program);
 
         processor.execute();
-        assertEquals(processor.peekProgramCounter(), jmpTo + 1); // We need to add jmpTo by 1, because in the last execute iteration when HALT gets decoded, the next() call auto-increments the pc.
+        assertEquals(jmpTo + 1, processor.peekProgramCounter());
     }
 
     private static final Stream<Arguments> jmpNotEqualsFails_args() {
@@ -321,13 +337,197 @@ public final class ProcessorTests implements AccessModes {
     public void jmpNotEqualsFails(byte cmpA) {
         byte jmpTo = 0x00;
         var program = new byte[] {
-            Opcode.CMP.value, IMM_TO_IMM, cmpA, cmpA,
-            Opcode.JMP_NOTEQUALS.value, IMM, jmpTo,
-            Opcode.HALT.value
+            CMP, IMM_TO_IMM, cmpA, cmpA,
+            JMP_NOTEQUALS, IMM, jmpTo,
+            HALT
         };
         var processor = new Processor(program);
 
         processor.execute();
-        assertNotEquals(processor.peekProgramCounter(), jmpTo + 1); // We need to add jmpTo by 1, because in the last execute iteration when HALT gets decoded, the next() call auto-increments the pc.
+        assertNotEquals(jmpTo + 1, processor.peekProgramCounter());
+    }
+
+    private static final Stream<Arguments> jmpLess_args() {
+        return Stream.of(
+            Arguments.of((byte) 0x00, (byte) 0x01),
+            Arguments.of((byte) 0x06, (byte) 0x08),
+            Arguments.of((byte) 0x02, (byte) 0x03)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("jmpLess_args")
+    public void jmpLess(byte cmpA, byte cmpB) {
+        byte jmpTo = 0x07;
+        var program = new byte[] {
+            CMP, IMM_TO_IMM, cmpA, cmpB,
+            JMP_LESS, IMM, jmpTo,
+            HALT
+        };
+        var processor = new Processor(program);
+
+        processor.execute();
+        assertEquals(jmpTo + 1,processor.peekProgramCounter());
+    }
+
+    private static final Stream<Arguments> jumpLessFails_args() {
+        return Stream.of(
+            Arguments.of((byte) 0x01, (byte) 0x01),
+            Arguments.of((byte) 0x09, (byte) 0x08),
+            Arguments.of((byte) 0x03, (byte) 0x03)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("jumpLessFails_args")
+    public void jumpLessFails(byte cmpA, byte cmpB) {
+        byte jmpTo = 0x00;
+        var program = new byte[] {
+            CMP, IMM_TO_IMM, cmpA, cmpB,
+            JMP_LESS, IMM, jmpTo,
+            HALT
+        };
+        var processor = new Processor(program);
+
+        processor.execute();
+        assertNotEquals(jmpTo + 1, processor.peekProgramCounter());
+    }
+
+    private static final Stream<Arguments> jmpLessEquals_args() {
+        return Stream.of(
+            Arguments.of((byte) 0x01, (byte) 0x01),
+            Arguments.of((byte) 0x07, (byte) 0x08),
+            Arguments.of((byte) 0x03, (byte) 0x03)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("jmpLessEquals_args")
+    public void jmpLessEquals(byte cmpA, byte cmpB) {
+        byte jmpTo = 0x07;
+        var program = new byte[] {
+            CMP, IMM_TO_IMM, cmpA, cmpB,
+            JMP_LESS_OR_EQUALS, IMM, jmpTo,
+            HALT
+        };
+        var processor = new Processor(program);
+
+        processor.execute();
+        assertEquals(jmpTo + 1, processor.peekProgramCounter());
+    }
+
+    private static final Stream<Arguments> jmpLessEqualsFails_args() {
+        return Stream.of(
+            Arguments.of((byte) 0x02, (byte) 0x01),
+            Arguments.of((byte) 0x09, (byte) 0x08),
+            Arguments.of((byte) 0x05, (byte) 0x03)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("jmpLessEqualsFails_args")
+    public void jmpLessEqualsFails(byte cmpA, byte cmpB) {
+        byte jmpTo = 0x00;
+        var program = new byte[] {
+            CMP, IMM_TO_IMM, cmpA, cmpB,
+            JMP_LESS_OR_EQUALS, IMM, jmpTo,
+            HALT
+        };
+        var processor = new Processor(program);
+
+        processor.execute();
+        assertNotEquals(jmpTo + 1, processor.peekProgramCounter());
+    }
+
+    private static final Stream<Arguments> jmpGreater_args() {
+        return Stream.of(
+            Arguments.of((byte) 0x02, (byte) 0x01),
+            Arguments.of((byte) 0x09, (byte) 0x08),
+            Arguments.of((byte) 0x05, (byte) 0x03)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("jmpGreater_args")
+    public void jmpGreater(byte cmpA, byte cmpB) {
+        byte jmpTo = 0x07;
+        var program = new byte[] {
+            CMP, IMM_TO_IMM, cmpA, cmpB,
+            JMP_GREATER, IMM, jmpTo,
+            HALT
+        };
+        var processor = new Processor(program);
+
+        processor.execute();
+        assertEquals(jmpTo + 1, processor.peekProgramCounter());
+    }
+
+    private static final Stream<Arguments> jmpGreaterFails_args() {
+        return Stream.of(
+            Arguments.of((byte) 0x01, (byte) 0x01),
+            Arguments.of((byte) 0x09, (byte) 0x08),
+            Arguments.of((byte) 0x05, (byte) 0x03)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("jmpGreaterFails_args")
+    public void jmpGreaterFails(byte cmpA, byte cmpB) {
+        byte jmpTo = 0x00;
+        var program = new byte[] {
+            CMP, IMM_TO_IMM, cmpA, cmpB,
+            JMP_GREATER, IMM, jmpTo,
+            HALT
+        };
+        var processor = new Processor(program);
+
+        processor.execute();
+        assertNotEquals(jmpTo + 1, processor.peekProgramCounter());
+    }
+
+    private static final Stream<Arguments> jmpGreaterEquals_args() {
+        return Stream.of(
+            Arguments.of((byte) 0x02, (byte) 0x01),
+            Arguments.of((byte) 0x08, (byte) 0x08),
+            Arguments.of((byte) 0x05, (byte) 0x03)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("jmpGreaterEquals_args")
+    public void jmpGreaterEquals(byte cmpA, byte cmpB) {
+        byte jmpTo = 0x07;
+        var program = new byte[] {
+            CMP, IMM_TO_IMM, cmpA, cmpB,
+            JMP_GREATER, IMM, jmpTo,
+            HALT
+        };
+        var processor = new Processor(program);
+
+        processor.execute();
+        assertEquals(jmpTo + 1, processor.peekProgramCounter());
+    }
+
+    private static final Stream<Arguments> jmpGreaterEqualsFails_args() {
+        return Stream.of(
+            Arguments.of((byte) 0x02, (byte) 0x03),
+            Arguments.of((byte) 0x08, (byte) 0x08),
+            Arguments.of((byte) 0x05, (byte) 0x06)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("jmpGreaterEqualsFails_args")
+    public void jmpGreaterEqualsFails(byte cmpA, byte cmpB) {
+        byte jmpTo = 0x00;
+        var program = new byte[] {
+            CMP, IMM_TO_IMM, cmpA, cmpB,
+            JMP_GREATER, IMM, jmpTo,
+            HALT
+        };
+        var processor = new Processor(program);
+
+        processor.execute();
+        assertNotEquals(jmpTo + 1, processor.peekProgramCounter());
     }
 }

@@ -3,7 +3,6 @@ package de.nxklas.mycpu.core;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static de.nxklas.mycpu.helpers.OperandFactory.*;
 
-
 import java.util.stream.Stream;
 
 import org.junit.jupiter.params.ParameterizedTest;
@@ -26,7 +25,7 @@ public final class ProcessorResolverTests {
     public void resolvesCorrectImmediateValue(ImmediateOperand operand, int value) {
         var processor = new Processor(null);
         var opVal = processor.resolve(operand);
-        assertEquals(opVal, value);
+        assertEquals(value, opVal);
     }
 
     private static Stream<Arguments> resolvesCorrectRegisterValue_args() {
@@ -42,6 +41,6 @@ public final class ProcessorResolverTests {
         var processor = new Processor(null);
         processor.writeRegister(index, value);
         var opVal = processor.resolve(operand);
-        assertEquals(opVal, value);
+        assertEquals(value, opVal);
     }
 }
