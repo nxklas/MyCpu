@@ -113,8 +113,6 @@ public class Processor {
                 var condition = (instruction.kind().value & alu.flags()) != 0;
                 if (condition)
                     jmp(dstValue);
-                else
-                    next();
                 break;
             default:
                 throw new IllegalArgumentException("Unexpected jmp kind: " + instruction.kind());
