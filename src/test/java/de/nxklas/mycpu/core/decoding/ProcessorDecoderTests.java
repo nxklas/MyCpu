@@ -1,4 +1,4 @@
-package de.nxklas.mycpu.core;
+package de.nxklas.mycpu.core.decoding;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static de.nxklas.mycpu.helpers.InstructionFactory.*;
@@ -44,9 +44,9 @@ public final class ProcessorDecoderTests {
         var program = new byte[] {
             opcode, accesMode, dst, src
         };
-        var processor = new Processor(program, 1); // To prevent the opcode being read, we set the program counter to
-                                                      // the second instruction.
-        var instruction = processor.decode(opcode);
+        var decoder = new InstructionDecoder(program);
+        var instruction = decoder.fetch();
+
         assertEquals(result, instruction);
     }
 }

@@ -1,6 +1,7 @@
 package de.nxklas.mycpu;
 
 import de.nxklas.mycpu.core.Processor;
+import de.nxklas.mycpu.core.decoding.InstructionDecoder;
 
 /*
     IMMEDIATE(0b00),
@@ -16,7 +17,9 @@ public class Main {
     };
 
     public static void main(String[] args) {
-        var processor = new Processor(program);
+        var decoder = new InstructionDecoder(program);
+        var instructions = decoder.decodeAllInstructions();
+        var processor = new Processor(instructions);
         processor.execute();
         System.out.println("Hello, world");
     }

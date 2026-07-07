@@ -41,7 +41,7 @@ public final class ProcessorTests {
         var program = new byte[] {
             MOV, IMM_TO_REG, dstRegister, srcImmediate
         };
-        var processor = new Processor(program);
+        var processor = new Processor(asInstructions(program));
 
         processor.execute();
         assertEquals(Byte.toUnsignedInt(srcImmediate), processor.peekRegister(dstRegister));
@@ -69,7 +69,7 @@ public final class ProcessorTests {
             MOV, IMM_TO_REG, srcRegister, immediate,
             MOV, REG_TO_REG, dstRegister, srcRegister
         };
-        var processor = new Processor(program);
+        var processor = new Processor(asInstructions(program));
 
         processor.execute();
         assertEquals(Byte.toUnsignedInt(immediate), processor.peekRegister(dstRegister));
@@ -97,7 +97,7 @@ public final class ProcessorTests {
             MOV, IMM_TO_REG, dstRegister, dstValue,
             ADD, IMM_TO_REG, dstRegister, srcImmediate
         };
-        var processor = new Processor(program);
+        var processor = new Processor(asInstructions(program));
 
         processor.execute();
         assertEquals(Byte.toUnsignedInt((byte) (dstValue + srcImmediate)), processor.peekRegister(dstRegister));
@@ -126,7 +126,7 @@ public final class ProcessorTests {
             MOV, IMM_TO_REG, srcRegister, srcValue,
             ADD, REG_TO_REG, dstRegister, srcRegister
         };
-        var processor = new Processor(program);
+        var processor = new Processor(asInstructions(program));
 
         processor.execute();
         assertEquals(Byte.toUnsignedInt((byte) (dstValue + srcValue)), processor.peekRegister(dstRegister));
@@ -139,7 +139,7 @@ public final class ProcessorTests {
             MOV, IMM_TO_REG, dstRegister, dstValue,
             SUB, IMM_TO_REG, dstRegister, srcImmediate
         };
-        var processor = new Processor(program);
+        var processor = new Processor(asInstructions(program));
 
         processor.execute();
         assertEquals(Byte.toUnsignedInt((byte) (dstValue - srcImmediate)), processor.peekRegister(dstRegister));
@@ -153,7 +153,7 @@ public final class ProcessorTests {
             MOV, IMM_TO_REG, srcRegister, srcValue,
             SUB, REG_TO_REG, dstRegister, srcRegister
         };
-        var processor = new Processor(program);
+        var processor = new Processor(asInstructions(program));
 
         processor.execute();
         assertEquals(Byte.toUnsignedInt((byte) (dstValue - srcValue)), processor.peekRegister(dstRegister));
@@ -179,7 +179,7 @@ public final class ProcessorTests {
             MOV, IMM_TO_REG, dstRegister, dstValue,
             CMP, IMM_TO_REG, dstRegister, srcImmediate
         };
-        var processor = new Processor(program);
+        var processor = new Processor(asInstructions(program));
 
         processor.execute();
         assertEquals(expected, processor.peekFlags());
@@ -205,7 +205,7 @@ public final class ProcessorTests {
         var program = new byte[] {
             CMP, IMM_TO_IMM, left, right
         };
-        var processor = new Processor(program);
+        var processor = new Processor(asInstructions(program));
 
         processor.execute();
         assertEquals(expected, processor.peekFlags());
@@ -247,7 +247,7 @@ public final class ProcessorTests {
             MOV, IMM_TO_REG, srcRegister, srcValue,
             CMP, REG_TO_REG, dstRegister, srcRegister
         };
-        var processor = new Processor(program);
+        var processor = new Processor(asInstructions(program));
 
         processor.execute();
         assertEquals(expected, processor.peekFlags());
@@ -264,13 +264,13 @@ public final class ProcessorTests {
     @ParameterizedTest
     @MethodSource("jmpEquals_args")
     public void jmpEquals(byte cmpA) {
-        byte jmpTo = 0x07;
+        byte jmpTo = 0x02;
         var program = new byte[] {
             CMP, IMM_TO_IMM, cmpA, cmpA,
             JMP_EQUALS, IMM, jmpTo,
             HALT
         };
-        var processor = new Processor(program);
+        var processor = new Processor(asInstructions(program));
 
         processor.execute();
         assertEquals(jmpTo + 1, processor.peekProgramCounter()); // We need to add jmpTo by 1, because in the last
@@ -295,10 +295,11 @@ public final class ProcessorTests {
             JMP_EQUALS, IMM, jmpTo,
             HALT
         };
-        var processor = new Processor(program);
+        var processor = new Processor(asInstructions(program));
 
         processor.execute();
         assertNotEquals(jmpTo + 1, processor.peekProgramCounter());
+        assertEquals(3, processor.peekProgramCounter());
     }
 
     private static final Stream<Arguments> jmpNotEquals_args() {
@@ -312,13 +313,13 @@ public final class ProcessorTests {
     @ParameterizedTest
     @MethodSource("jmpNotEquals_args")
     public void jmpNotEquals(byte cmpA, byte cmpB) {
-        byte jmpTo = 0x07;
+        byte jmpTo = 0x02;
         var program = new byte[] {
             CMP, IMM_TO_IMM, cmpA, cmpB,
             JMP_NOTEQUALS, IMM, jmpTo,
             HALT
         };
-        var processor = new Processor(program);
+        var processor = new Processor(asInstructions(program));
 
         processor.execute();
         assertEquals(jmpTo + 1, processor.peekProgramCounter());
@@ -341,10 +342,11 @@ public final class ProcessorTests {
             JMP_NOTEQUALS, IMM, jmpTo,
             HALT
         };
-        var processor = new Processor(program);
+        var processor = new Processor(asInstructions(program));
 
         processor.execute();
         assertNotEquals(jmpTo + 1, processor.peekProgramCounter());
+        assertEquals(3, processor.peekProgramCounter());
     }
 
     private static final Stream<Arguments> jmpLess_args() {
@@ -358,16 +360,16 @@ public final class ProcessorTests {
     @ParameterizedTest
     @MethodSource("jmpLess_args")
     public void jmpLess(byte cmpA, byte cmpB) {
-        byte jmpTo = 0x07;
+        byte jmpTo = 0x02;
         var program = new byte[] {
             CMP, IMM_TO_IMM, cmpA, cmpB,
             JMP_LESS, IMM, jmpTo,
             HALT
         };
-        var processor = new Processor(program);
+        var processor = new Processor(asInstructions(program));
 
         processor.execute();
-        assertEquals(jmpTo + 1,processor.peekProgramCounter());
+        assertEquals(jmpTo + 1, processor.peekProgramCounter());
     }
 
     private static final Stream<Arguments> jumpLessFails_args() {
@@ -387,10 +389,11 @@ public final class ProcessorTests {
             JMP_LESS, IMM, jmpTo,
             HALT
         };
-        var processor = new Processor(program);
+        var processor = new Processor(asInstructions(program));
 
         processor.execute();
         assertNotEquals(jmpTo + 1, processor.peekProgramCounter());
+        assertEquals(3, processor.peekProgramCounter());
     }
 
     private static final Stream<Arguments> jmpLessEquals_args() {
@@ -404,13 +407,13 @@ public final class ProcessorTests {
     @ParameterizedTest
     @MethodSource("jmpLessEquals_args")
     public void jmpLessEquals(byte cmpA, byte cmpB) {
-        byte jmpTo = 0x07;
+        byte jmpTo = 0x02;
         var program = new byte[] {
             CMP, IMM_TO_IMM, cmpA, cmpB,
             JMP_LESS_OR_EQUALS, IMM, jmpTo,
             HALT
         };
-        var processor = new Processor(program);
+        var processor = new Processor(asInstructions(program));
 
         processor.execute();
         assertEquals(jmpTo + 1, processor.peekProgramCounter());
@@ -433,10 +436,11 @@ public final class ProcessorTests {
             JMP_LESS_OR_EQUALS, IMM, jmpTo,
             HALT
         };
-        var processor = new Processor(program);
+        var processor = new Processor(asInstructions(program));
 
         processor.execute();
         assertNotEquals(jmpTo + 1, processor.peekProgramCounter());
+        assertEquals(3, processor.peekProgramCounter());
     }
 
     private static final Stream<Arguments> jmpGreater_args() {
@@ -450,13 +454,13 @@ public final class ProcessorTests {
     @ParameterizedTest
     @MethodSource("jmpGreater_args")
     public void jmpGreater(byte cmpA, byte cmpB) {
-        byte jmpTo = 0x07;
+        byte jmpTo = 0x02;
         var program = new byte[] {
             CMP, IMM_TO_IMM, cmpA, cmpB,
             JMP_GREATER, IMM, jmpTo,
             HALT
         };
-        var processor = new Processor(program);
+        var processor = new Processor(asInstructions(program));
 
         processor.execute();
         assertEquals(jmpTo + 1, processor.peekProgramCounter());
@@ -479,10 +483,11 @@ public final class ProcessorTests {
             JMP_GREATER, IMM, jmpTo,
             HALT
         };
-        var processor = new Processor(program);
+        var processor = new Processor(asInstructions(program));
 
         processor.execute();
         assertNotEquals(jmpTo + 1, processor.peekProgramCounter());
+        assertEquals(3, processor.peekProgramCounter());
     }
 
     private static final Stream<Arguments> jmpGreaterEquals_args() {
@@ -496,13 +501,13 @@ public final class ProcessorTests {
     @ParameterizedTest
     @MethodSource("jmpGreaterEquals_args")
     public void jmpGreaterEquals(byte cmpA, byte cmpB) {
-        byte jmpTo = 0x07;
+        byte jmpTo = 0x02;
         var program = new byte[] {
             CMP, IMM_TO_IMM, cmpA, cmpB,
-            JMP_GREATER, IMM, jmpTo,
+            JMP_GREATER_OR_EQUALS, IMM, jmpTo,
             HALT
         };
-        var processor = new Processor(program);
+        var processor = new Processor(asInstructions(program));
 
         processor.execute();
         assertEquals(jmpTo + 1, processor.peekProgramCounter());
@@ -511,7 +516,7 @@ public final class ProcessorTests {
     private static final Stream<Arguments> jmpGreaterEqualsFails_args() {
         return Stream.of(
             Arguments.of((byte) 0x02, (byte) 0x03),
-            Arguments.of((byte) 0x08, (byte) 0x08),
+            Arguments.of((byte) 0x06, (byte) 0x08),
             Arguments.of((byte) 0x05, (byte) 0x06)
         );
     }
@@ -522,12 +527,13 @@ public final class ProcessorTests {
         byte jmpTo = 0x00;
         var program = new byte[] {
             CMP, IMM_TO_IMM, cmpA, cmpB,
-            JMP_GREATER, IMM, jmpTo,
+            JMP_GREATER_OR_EQUALS, IMM, jmpTo,
             HALT
         };
-        var processor = new Processor(program);
+        var processor = new Processor(asInstructions(program));
 
         processor.execute();
         assertNotEquals(jmpTo + 1, processor.peekProgramCounter());
+        assertEquals(3, processor.peekProgramCounter());
     }
 }

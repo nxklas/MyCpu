@@ -2,16 +2,15 @@ package de.nxklas.mycpu.core;
 
 import de.nxklas.mycpu.core.instructions.*;
 import de.nxklas.mycpu.core.operands.*;
-import de.nxklas.mycpu.util.Tuple;
 
 public class Processor {
-    private final byte[] program;
+    private final Instruction[] program;
     private final int[] registers;
     private final Alu alu;
     private boolean isRunning;
     private int pc;
 
-    public Processor(byte[] program) {
+    public Processor(Instruction[] program) {
         this.program = program;
         this.registers = new int[10];
         this.alu = new Alu();
@@ -20,7 +19,7 @@ public class Processor {
     }
 
     // Only for testing purposes.
-    Processor(byte[] program, int pc) {
+    Processor(Instruction[] program, int pc) {
         this(program);
         this.pc = pc;
     }
@@ -50,68 +49,12 @@ public class Processor {
     public void execute() {
         isRunning = true;
         while (isRunning && pc < program.length) {
-            var instrcution = fetch();
+            var instrcution = next();
             execute(instrcution);
         }
 
         if (pc > program.length)
             throw new IllegalArgumentException("Program has never ended properely.");
-    }
-
-    private Instruction fetch() {
-        var opcode = next();
-        return decode(opcode);
-    }
-
-    Instruction decode(byte opcode) {
-        Tuple<Operand, Operand> dstSrcPair;
-
-        switch (Opcode.fromValue(opcode)) {
-            case NOP:
-                return new NopInstruction();
-            case MOV:
-                dstSrcPair = readDstSrcPair();
-                return new MovInstruction(dstSrcPair.value1, dstSrcPair.value2);
-            case ADD:
-                dstSrcPair = readDstSrcPair();
-                return new AddInstruction(dstSrcPair.value1, dstSrcPair.value2);
-            case SUB:
-                dstSrcPair = readDstSrcPair();
-                return new SubInstruction(dstSrcPair.value1, dstSrcPair.value2);
-            case CMP:
-                dstSrcPair = readDstSrcPair();
-                return new CmpInstruction(dstSrcPair.value1, dstSrcPair.value2);
-            case JMP:
-                return new JmpInstruction(JmpKind.None, readDst());
-            case JMP_EQUALS:
-                return new JmpInstruction(JmpKind.Equals, readDst());
-            case JMP_NOTEQUALS:
-                return new JmpInstruction(JmpKind.NotEquals, readDst());
-            case JMP_LESS:
-                return new JmpInstruction(JmpKind.Less, readDst());
-            case JMP_LESS_OR_EQUALS:
-                return new JmpInstruction(JmpKind.LessOrEquals, readDst());
-            case JMP_GREATER:
-                return new JmpInstruction(JmpKind.Greater, readDst());
-            case JMP_GREATER_OR_EQUALS:
-                return new JmpInstruction(JmpKind.GreaterOrEquals, readDst());
-            case HALT:
-                return new HaltInstruction();
-            default:
-                throw new IllegalArgumentException("Unexpected opcode in instruction decode: " + opcode);
-        }
-    }
-
-    private Operand readDst() {
-        var dst = AccessMode.fromValue(next());
-        return readOperand(dst);
-    }
-
-    private Tuple<Operand, Operand> readDstSrcPair() {
-        var mode = AccessMode.decode(next());
-        var dst = readOperand(mode.value1);
-        var src = readOperand(mode.value2);
-        return new Tuple<Operand, Operand>(dst, src);
     }
 
     private void execute(Instruction instruction) {
@@ -188,17 +131,8 @@ public class Processor {
         isRunning = false;
     }
 
-    private byte next() {
+    private Instruction next() {
         return program[pc++];
-    }
-
-    private Operand readOperand(AccessMode mode) {
-        var next = next();
-        return switch (mode) {
-            case IMMEDIATE -> new ImmediateOperand(next);
-            case REGISTER -> new RegisterOperand(next);
-            default -> throw new IllegalArgumentException("Unexpected access mode to read: " + mode);
-        };
     }
 
     int resolve(Operand op) {

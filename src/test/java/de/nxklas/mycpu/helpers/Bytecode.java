@@ -2,6 +2,8 @@ package de.nxklas.mycpu.helpers;
 
 import de.nxklas.mycpu.core.AccessMode;
 import de.nxklas.mycpu.core.Opcode;
+import de.nxklas.mycpu.core.decoding.InstructionDecoder;
+import de.nxklas.mycpu.core.instructions.Instruction;
 
 public final class Bytecode {
     public static final byte IMM = AccessMode.IMMEDIATE.value;
@@ -23,5 +25,9 @@ public final class Bytecode {
     public static final byte HALT = Opcode.HALT.value;
 
     private Bytecode() {
+    }
+
+    public static Instruction[] asInstructions(byte[] bytecode) {
+        return new InstructionDecoder(bytecode).decodeAllInstructions();
     }
 }
